@@ -1,2 +1,3 @@
 # raytracing
-Working through raytracing.github.io in Go
+
+Working through raytracing.github.io in Go.
