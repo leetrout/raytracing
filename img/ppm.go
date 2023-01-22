@@ -22,17 +22,18 @@ func Vec3AsRGB(v *vec3.Vec3) [3]int {
 	}
 }
 
-func WritePPM(w io.Writer, pixels [][][3]int) {
-	height := len(pixels)
-	width := len(pixels[0])
+func WritePPM(w io.Writer, width, height int, pixels [][3]int) {
 	fmt.Fprintln(w, "P3")
 	fmt.Fprintf(w, "%d %d\n", width, height)
 	fmt.Fprintln(w, "255")
-	for i, row := range pixels {
-		fmt.Fprintf(os.Stderr, "\rLines remaining: %d", height-1-i)
-		for _, col := range row {
-			fmt.Fprintf(w, "%d %d %d\n", col[0], col[1], col[2])
+	for i, px := range pixels {
+		// The number of lines is the height of the image but we
+		// have to divide by the width to determine where we are in
+		// the array
+		if i%width == 0 {
+			fmt.Fprintf(os.Stderr, "\rLines remaining: %d", height-1-i/width)
 		}
+		fmt.Fprintf(w, "%d %d %d\n", px[0], px[1], px[2])
 	}
-	fmt.Fprintf(os.Stderr, "\n Done")
+	fmt.Fprint(os.Stderr, "\n Done")
 }

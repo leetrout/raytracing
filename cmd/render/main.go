@@ -64,10 +64,9 @@ func main() {
 	// Move back by the focal length
 	lowerLeftCorner = vec3.Sub(lowerLeftCorner, &vec3.Vec3{0, 0, focalLength})
 
-	pixels := [][][3]int{}
+	pixels := make([][3]int, imageHeight*imageWidth)
 
 	for j := imageHeight - 1; j >= 0; j-- {
-		row := [][3]int{}
 		for i := 0; i < imageWidth; i++ {
 			u := float64(i) / float64(imageWidth-1)
 			v := float64(j) / float64(imageHeight-1)
@@ -82,10 +81,15 @@ func main() {
 			// Subtract origin (remember negative Z is "forward")
 			r.Direction = vec3.Sub(r.Direction, origin)
 
-			row = append(row, img.Vec3AsRGB(RayColor(r)))
+			// We're walking up the image from bottom to top but we need to
+			// write the pixels top to bottom so the current pixel is located
+			// at the image height (e.g. 200) minus 1 to zero index (199)
+			// and finally minus the current "row" (j) which starts at 199
+			// assuming a 200px image
+			pixelIdx := (imageWidth * (imageHeight - 1 - j)) + i
+			pixels[pixelIdx] = img.Vec3AsRGB(RayColor(r))
 		}
-		pixels = append(pixels, row)
 	}
 
-	img.WritePPM(os.Stdout, pixels)
+	img.WritePPM(os.Stdout, imageWidth, imageHeight, pixels)
 }
