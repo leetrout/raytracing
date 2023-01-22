@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"os"
 
 	"github.com/leetrout/raytracing/img"
@@ -8,21 +9,28 @@ import (
 	"github.com/leetrout/raytracing/vec3"
 )
 
-func HitSphere(center *vec3.Vec3, radius float64, r *ray.Ray) bool {
+func HitSphere(center *vec3.Vec3, radius float64, r *ray.Ray) float64 {
 	originToCenter := vec3.Sub(r.Origin, center)
 	a := vec3.Dot(r.Direction, r.Direction)
 	b := vec3.Dot(originToCenter, r.Direction) * 2.0
 	c := vec3.Dot(originToCenter, originToCenter) - radius*radius
 	discriminant := b*b - 4*a*c
-	return discriminant > 0
+	if discriminant < 0 {
+		return -1.0
+	} else {
+		return (-b - math.Sqrt(discriminant)) / (2.0 * a)
+	}
 }
 
 func RayColor(r *ray.Ray) *vec3.Vec3 {
-	if HitSphere(&vec3.Vec3{0, 0, -1}, 0.5, r) {
-		return &vec3.Vec3{1, 0, 0}
+	sphereOrigin := &vec3.Vec3{0, 0, -1}
+	t := HitSphere(sphereOrigin, 0.5, r)
+	if t > 0.0 {
+		N := vec3.UnitVector(vec3.Sub(r.At(t), sphereOrigin))
+		return vec3.MultiplyFloat64(0.5, &vec3.Vec3{N.X + 1, N.Y + 1, N.Z + 1})
 	}
 	ud := vec3.UnitVector(r.Direction)
-	t := 0.5 * (ud.Y + 1.0)
+	t = 0.5 * (ud.Y + 1.0)
 	white := &vec3.Color{1.0, 1.0, 1.0}
 	white = vec3.MultiplyFloat64(1.0-t, white)
 	blue := &vec3.Color{0.5, 0.7, 1.0}
