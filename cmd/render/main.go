@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"os"
+	"time"
 
 	"github.com/leetrout/raytracing/geo"
 	"github.com/leetrout/raytracing/img"
@@ -33,7 +36,7 @@ func RayColor(r *ray.Ray, s *scene.Scene) *vec3.Vec3 {
 	return vec3.Add(white, blue)
 }
 
-func main() {
+func render(fh io.Writer) {
 	// Render
 	samplesPerPixel := 100
 
@@ -54,6 +57,7 @@ func main() {
 	pixels := make([][3]int, imageHeight*imageWidth)
 
 	for j := imageHeight - 1; j >= 0; j-- {
+		fmt.Printf("\r %s Scanlines remaining: %d     ", time.Now().Format("02 Jan 06 15:04:05.9"), j)
 		for i := 0; i < imageWidth; i++ {
 			color := &vec3.Color{}
 
@@ -74,6 +78,21 @@ func main() {
 			pixels[pixelIdx] = img.Vec3AsRGB(color, samplesPerPixel)
 		}
 	}
+	img.WritePPM(fh, imageWidth, imageHeight, pixels)
+	fmt.Printf("\r\n")
+}
 
-	img.WritePPM(os.Stdout, imageWidth, imageHeight, pixels)
+func main() {
+	name := "output.ppm"
+	if len(os.Args) > 1 {
+		name = os.Args[1]
+	}
+	fh, err := os.Create(name)
+	if err != nil {
+		panic(err)
+	}
+	defer fh.Close()
+	fmt.Printf("Starting render (%s)\n", name)
+	render(fh)
+	fmt.Println("Complete")
 }
