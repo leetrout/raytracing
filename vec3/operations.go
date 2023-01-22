@@ -8,6 +8,14 @@ func Add(u, v *Vec3) *Vec3 {
 	}
 }
 
+func Sub(u, v *Vec3) *Vec3 {
+	return &Vec3{
+		u.X - v.X,
+		u.Y - v.Y,
+		u.Z - v.Z,
+	}
+}
+
 func MultiplyVec3(u, v *Vec3) *Vec3 {
 	return &Vec3{
 		u.X * v.X,
@@ -33,6 +41,14 @@ func Cross(u, v Vec3) *Vec3 {
 		u.Y*v.Z - u.Z*v.Y,
 		u.Z*v.X - u.X*v.Z,
 		u.X*v.Y - u.Y*v.X,
+	}
+}
+
+func DivideVec3(u, v Vec3) *Vec3 {
+	return &Vec3{
+		u.X / v.X,
+		u.Y / v.Y,
+		u.Z / v.Z,
 	}
 }
 

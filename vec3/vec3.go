@@ -8,6 +8,10 @@ type Vec3 struct {
 	Z float64
 }
 
+func (v *Vec3) Copy() *Vec3 {
+	return &Vec3{v.X, v.Y, v.Z}
+}
+
 func (v *Vec3) LengthSquared() float64 {
 	return v.X*v.X + v.Y*v.Y + v.Z*v.Z
 }

@@ -4,12 +4,22 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/leetrout/raytracing/vec3"
 )
 
 const RGBMax = 255.999
 
 func ClampRGB(f float64) int {
 	return int(f * RGBMax)
+}
+
+func Vec3AsRGB(v *vec3.Vec3) [3]int {
+	return [3]int{
+		ClampRGB(v.X),
+		ClampRGB(v.Y),
+		ClampRGB(v.Z),
+	}
 }
 
 func WritePPM(w io.Writer, pixels [][][3]int) {
