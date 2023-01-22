@@ -59,3 +59,11 @@ func DivideFloat(v *Vec3, f float64) *Vec3 {
 func UnitVector(v *Vec3) *Vec3 {
 	return DivideFloat(v, v.Length())
 }
+
+func Invert(v *Vec3) *Vec3 {
+	return &Vec3{
+		-v.X,
+		-v.Y,
+		-v.Z,
+	}
+}

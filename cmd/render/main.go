@@ -4,37 +4,31 @@ import (
 	"math"
 	"os"
 
+	"github.com/leetrout/raytracing/geo"
 	"github.com/leetrout/raytracing/img"
 	"github.com/leetrout/raytracing/ray"
+	"github.com/leetrout/raytracing/scene"
 	"github.com/leetrout/raytracing/vec3"
 )
 
-func HitSphere(center *vec3.Vec3, radius float64, r *ray.Ray) float64 {
-	originToCenter := vec3.Sub(r.Origin, center)
-	a := r.Direction.LengthSquared()
-	half_b := vec3.Dot(originToCenter, r.Direction)
-	c := originToCenter.LengthSquared() - radius*radius
-	discriminant := half_b*half_b - a*c
-	if discriminant < 0 {
-		return -1.0
-	} else {
-		return (-half_b - math.Sqrt(discriminant)) / a
-	}
-}
-
-func RayColor(r *ray.Ray) *vec3.Vec3 {
-	sphereOrigin := &vec3.Vec3{0, 0, -1}
-	t := HitSphere(sphereOrigin, 0.5, r)
-	if t > 0.0 {
-		N := vec3.UnitVector(vec3.Sub(r.At(t), sphereOrigin))
-		return vec3.MultiplyFloat64(0.5, &vec3.Vec3{N.X + 1, N.Y + 1, N.Z + 1})
+func RayColor(r *ray.Ray, s *scene.Scene) *vec3.Vec3 {
+	h := ray.NewHit()
+	if s.Hit(r, 0, math.MaxFloat64, h) {
+		N := vec3.Add(h.N, &vec3.Color{1, 1, 1})
+		return vec3.MultiplyFloat64(0.5, N)
 	}
 	ud := vec3.UnitVector(r.Direction)
-	t = 0.5 * (ud.Y + 1.0)
+	t := 0.5 * (ud.Y + 1.0)
+
+	// lerp white to black
 	white := &vec3.Color{1.0, 1.0, 1.0}
 	white = vec3.MultiplyFloat64(1.0-t, white)
+
+	// lerp black to blue
 	blue := &vec3.Color{0.5, 0.7, 1.0}
 	blue = vec3.MultiplyFloat64(t, blue)
+
+	// Add them to make a gradient
 	return vec3.Add(white, blue)
 }
 
@@ -45,6 +39,13 @@ func main() {
 	aspectRatio := 16.0 / 9.0
 	imageWidth := 400
 	imageHeight := int(float64(imageWidth) / aspectRatio)
+
+	// Scene
+	s := &scene.Scene{}
+	// Sphere
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5})
+	// Floor
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100})
 
 	// Camera
 	viewportHeight := 2.0
@@ -87,7 +88,7 @@ func main() {
 			// and finally minus the current "row" (j) which starts at 199
 			// assuming a 200px image
 			pixelIdx := (imageWidth * (imageHeight - 1 - j)) + i
-			pixels[pixelIdx] = img.Vec3AsRGB(RayColor(r))
+			pixels[pixelIdx] = img.Vec3AsRGB(RayColor(r, s))
 		}
 	}
 
