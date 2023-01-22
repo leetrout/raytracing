@@ -32,11 +32,11 @@ func MultiplyFloat64(t float64, v *Vec3) *Vec3 {
 	}
 }
 
-func Dot(u, v Vec3) float64 {
+func Dot(u, v *Vec3) float64 {
 	return u.X*v.X + u.Y*v.Y + u.Z*v.Z
 }
 
-func Cross(u, v Vec3) *Vec3 {
+func Cross(u, v *Vec3) *Vec3 {
 	return &Vec3{
 		u.Y*v.Z - u.Z*v.Y,
 		u.Z*v.X - u.X*v.Z,
@@ -44,7 +44,7 @@ func Cross(u, v Vec3) *Vec3 {
 	}
 }
 
-func DivideVec3(u, v Vec3) *Vec3 {
+func DivideVec3(u, v *Vec3) *Vec3 {
 	return &Vec3{
 		u.X / v.X,
 		u.Y / v.Y,

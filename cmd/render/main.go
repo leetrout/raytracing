@@ -8,7 +8,19 @@ import (
 	"github.com/leetrout/raytracing/vec3"
 )
 
+func HitSphere(center *vec3.Vec3, radius float64, r *ray.Ray) bool {
+	originToCenter := vec3.Sub(r.Origin, center)
+	a := vec3.Dot(r.Direction, r.Direction)
+	b := vec3.Dot(originToCenter, r.Direction) * 2.0
+	c := vec3.Dot(originToCenter, originToCenter) - radius*radius
+	discriminant := b*b - 4*a*c
+	return discriminant > 0
+}
+
 func RayColor(r *ray.Ray) *vec3.Vec3 {
+	if HitSphere(&vec3.Vec3{0, 0, -1}, 0.5, r) {
+		return &vec3.Vec3{1, 0, 0}
+	}
 	ud := vec3.UnitVector(r.Direction)
 	t := 0.5 * (ud.Y + 1.0)
 	white := &vec3.Color{1.0, 1.0, 1.0}
