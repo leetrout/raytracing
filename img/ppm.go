@@ -8,17 +8,28 @@ import (
 	"github.com/leetrout/raytracing/vec3"
 )
 
-const RGBMax = 255.999
+const RGBMax = 256
 
-func ClampRGB(f float64) int {
-	return int(f * RGBMax)
+func ClampRGB(f float64, samples int) int {
+	scale := 1.0 / float64(samples)
+	return int(RGBMax * (Clamp(f*scale, 0, 0.999)))
 }
 
-func Vec3AsRGB(v *vec3.Vec3) [3]int {
+func Clamp(x, min, max float64) float64 {
+	if x < min {
+		return min
+	}
+	if x > max {
+		return max
+	}
+	return x
+}
+
+func Vec3AsRGB(v *vec3.Vec3, samples int) [3]int {
 	return [3]int{
-		ClampRGB(v.X),
-		ClampRGB(v.Y),
-		ClampRGB(v.Z),
+		ClampRGB(v.X, samples),
+		ClampRGB(v.Y, samples),
+		ClampRGB(v.Z, samples),
 	}
 }
 

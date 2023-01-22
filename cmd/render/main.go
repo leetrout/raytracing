@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"math/rand"
 	"os"
 
 	"github.com/leetrout/raytracing/geo"
@@ -34,6 +35,7 @@ func RayColor(r *ray.Ray, s *scene.Scene) *vec3.Vec3 {
 
 func main() {
 	// Render
+	samplesPerPixel := 100
 
 	// Image
 	aspectRatio := 16.0 / 9.0
@@ -47,40 +49,21 @@ func main() {
 	// Floor
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100})
 
-	// Camera
-	viewportHeight := 2.0
-	viewportWidth := aspectRatio * viewportHeight
-	focalLength := 1.0
-
-	origin := &vec3.Pt3{}
-	horizontal := &vec3.Vec3{viewportWidth, 0, 0}
-	vertical := &vec3.Vec3{0, viewportHeight, 0}
-
-	// Lower left corner is translated from the origin - start at 0,0,0
-	lowerLeftCorner := &vec3.Vec3{}
-	// Move to the left by half the width
-	lowerLeftCorner = vec3.Sub(lowerLeftCorner, vec3.DivideFloat(horizontal, 2))
-	// Move down by half the width
-	lowerLeftCorner = vec3.Sub(lowerLeftCorner, vec3.DivideFloat(vertical, 2))
-	// Move back by the focal length
-	lowerLeftCorner = vec3.Sub(lowerLeftCorner, &vec3.Vec3{0, 0, focalLength})
+	cam := scene.NewCamera()
 
 	pixels := make([][3]int, imageHeight*imageWidth)
 
 	for j := imageHeight - 1; j >= 0; j-- {
 		for i := 0; i < imageWidth; i++ {
-			u := float64(i) / float64(imageWidth-1)
-			v := float64(j) / float64(imageHeight-1)
+			color := &vec3.Color{}
 
-			// Initialize ray from origin to corner
-			r := &ray.Ray{origin.Copy(), lowerLeftCorner.Copy()}
-			// Move ray based on current pixel
-			// First horizontally
-			r.Direction = vec3.Add(r.Direction, vec3.MultiplyFloat64(u, horizontal))
-			// Second vertically
-			r.Direction = vec3.Add(r.Direction, vec3.MultiplyFloat64(v, vertical))
-			// Subtract origin (remember negative Z is "forward")
-			r.Direction = vec3.Sub(r.Direction, origin)
+			for p := 0; p < samplesPerPixel; p++ {
+				u := (float64(i) + rand.Float64()) / float64(imageWidth-1)
+				v := (float64(j) + rand.Float64()) / float64(imageHeight-1)
+
+				r := cam.GetRay(u, v)
+				color = vec3.Add(color, RayColor(r, s))
+			}
 
 			// We're walking up the image from bottom to top but we need to
 			// write the pixels top to bottom so the current pixel is located
@@ -88,7 +71,7 @@ func main() {
 			// and finally minus the current "row" (j) which starts at 199
 			// assuming a 200px image
 			pixelIdx := (imageWidth * (imageHeight - 1 - j)) + i
-			pixels[pixelIdx] = img.Vec3AsRGB(RayColor(r, s))
+			pixels[pixelIdx] = img.Vec3AsRGB(color, samplesPerPixel)
 		}
 	}
 
