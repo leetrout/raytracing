@@ -3,6 +3,7 @@ package img
 import (
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/leetrout/raytracing/vec3"
 )
@@ -11,7 +12,8 @@ const RGBMax = 256
 
 func ClampRGB(f float64, samples int) int {
 	scale := 1.0 / float64(samples)
-	return int(RGBMax * (Clamp(f*scale, 0, 0.999)))
+	gammaAdjusted := math.Sqrt(f * scale)
+	return int(RGBMax * (Clamp(gammaAdjusted, 0, 0.999)))
 }
 
 func Clamp(x, min, max float64) float64 {

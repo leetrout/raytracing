@@ -15,6 +15,9 @@ type Sphere struct {
 var _ ray.Hittable = &Sphere{}
 
 func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64) *ray.Hit {
+	if tMin < 0.00001 {
+		panic("tMin is too low. Use 0.001")
+	}
 	originToCenter := vec3.Sub(r.Origin, s.Center)
 	a := r.Direction.LengthSquared()
 	half_b := vec3.Dot(originToCenter, r.Direction)

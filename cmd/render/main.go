@@ -15,11 +15,43 @@ import (
 	"github.com/leetrout/raytracing/vec3"
 )
 
-func RayColor(r *ray.Ray, s *scene.Scene) *vec3.Vec3 {
-	if h := s.Hit(r, 0, math.MaxFloat64); h != nil {
-		N := vec3.Add(h.N, &vec3.Color{1, 1, 1})
-		return vec3.MultiplyFloat64(0.5, N)
+func findRandomInUnitSphere() *vec3.Vec3 {
+	for {
+		// Random point in unit cube
+		p := vec3.Random(-1, 1)
+		if p.LengthSquared() >= 1 {
+			// p is outside unit sphere
+			continue
+		}
+		return p
 	}
+}
+
+func findRandomUnitVector() *vec3.Vec3 {
+	return vec3.UnitVector(findRandomInUnitSphere())
+}
+
+func RayColor(r *ray.Ray, s *scene.Scene, depth int) *vec3.Vec3 {
+	if depth <= 0 {
+		// Reached the limit, return black
+		return &vec3.Color{}
+	}
+	if h := s.Hit(r, 0.001, math.MaxFloat64); h != nil {
+		// Render as normals
+		// N := vec3.Add(h.N, &vec3.Color{1, 1, 1})
+		// return vec3.MultiplyFloat64(0.5, N)
+
+		randomBounce := findRandomUnitVector()
+
+		target := vec3.Sum(h.P, h.N, randomBounce)
+		newRay := &ray.Ray{
+			Origin:    h.P,
+			Direction: vec3.Sub(target, h.P),
+		}
+		return vec3.MultiplyFloat64(0.5, RayColor(newRay, s, depth-1))
+	}
+
+	// No hit, draw the background as a sky
 	ud := vec3.UnitVector(r.Direction)
 	t := 0.5 * (ud.Y + 1.0)
 
@@ -38,6 +70,7 @@ func RayColor(r *ray.Ray, s *scene.Scene) *vec3.Vec3 {
 func render(fh io.Writer) {
 	// Render
 	samplesPerPixel := 100
+	maxDepth := 25
 
 	// Image
 	aspectRatio := 16.0 / 9.0
@@ -65,7 +98,7 @@ func render(fh io.Writer) {
 				v := (float64(j) + rand.Float64()) / float64(imageHeight-1)
 
 				r := cam.GetRay(u, v)
-				color = vec3.Add(color, RayColor(r, s))
+				color = vec3.Add(color, RayColor(r, s, maxDepth))
 			}
 
 			// We're walking up the image from bottom to top but we need to
@@ -82,6 +115,7 @@ func render(fh io.Writer) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixMicro())
 	name := "output.ppm"
 	if len(os.Args) > 1 {
 		name = os.Args[1]

@@ -1,11 +1,21 @@
 package vec3
 
+import "math/rand"
+
 func Add(u, v *Vec3) *Vec3 {
 	return &Vec3{
 		u.X + v.X,
 		u.Y + v.Y,
 		u.Z + v.Z,
 	}
+}
+
+func Sum(vs ...*Vec3) *Vec3 {
+	v := &Vec3{}
+	for _, u := range vs {
+		v = Add(v, u)
+	}
+	return v
 }
 
 func Sub(u, v *Vec3) *Vec3 {
@@ -65,5 +75,17 @@ func Invert(v *Vec3) *Vec3 {
 		-v.X,
 		-v.Y,
 		-v.Z,
+	}
+}
+
+func getRandom(min, max int) float64 {
+	return rand.Float64()*float64(max-min) + float64(min)
+}
+
+func Random(min, max int) *Vec3 {
+	return &Vec3{
+		getRandom(min, max),
+		getRandom(min, max),
+		getRandom(min, max),
 	}
 }
