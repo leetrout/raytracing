@@ -10,19 +10,17 @@ type Scene struct {
 
 var _ ray.Hittable = &Scene{}
 
-func (s *Scene) Hit(r *ray.Ray, tMin float64, tMax float64, h *ray.Hit) bool {
-	tempRec := ray.NewHit()
-	hitAny := false
+func (s *Scene) Hit(r *ray.Ray, tMin float64, tMax float64) *ray.Hit {
+	var anyHit *ray.Hit
 	closestSoFar := tMax
 
 	for _, o := range s.Objects {
-		if o.Hit(r, tMin, closestSoFar, tempRec) {
-			hitAny = true
-			closestSoFar = tempRec.T
-			// TODO I don't like this mutating
-			h.CopyFrom(tempRec)
+		if h := o.Hit(r, tMin, closestSoFar); h != nil {
+			closestSoFar = h.T
+			anyHit = ray.NewHit()
+			anyHit.CopyFrom(h)
 		}
 	}
 
-	return hitAny
+	return anyHit
 }

@@ -14,7 +14,7 @@ type Sphere struct {
 
 var _ ray.Hittable = &Sphere{}
 
-func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64, h *ray.Hit) bool {
+func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64) *ray.Hit {
 	originToCenter := vec3.Sub(r.Origin, s.Center)
 	a := r.Direction.LengthSquared()
 	half_b := vec3.Dot(originToCenter, r.Direction)
@@ -23,7 +23,7 @@ func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64, h *ray.Hit) bool {
 	discriminant := half_b*half_b - a*c
 
 	if discriminant < 0 {
-		return false
+		return nil
 	}
 
 	sqrtd := math.Sqrt(discriminant)
@@ -33,16 +33,15 @@ func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64, h *ray.Hit) bool {
 	if root < tMin || tMax < root {
 		root = (-half_b + sqrtd) / a
 		if root < tMin || tMax < root {
-			return false
+			return nil
 		}
 	}
 
-	// TODO - I don't like mutating this here... author calls this out
-	// as a design decision
+	h := ray.NewHit()
 	h.T = root
-	h.P = r.At(h.T)
+	h.P = r.At(root)
 	outwardNormal := vec3.DivideFloat(vec3.Sub(h.P, s.Center), s.Radius)
 	h.SetFaceNormal(r, outwardNormal)
 
-	return true
+	return h
 }

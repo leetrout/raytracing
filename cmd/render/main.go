@@ -16,8 +16,7 @@ import (
 )
 
 func RayColor(r *ray.Ray, s *scene.Scene) *vec3.Vec3 {
-	h := ray.NewHit()
-	if s.Hit(r, 0, math.MaxFloat64, h) {
+	if h := s.Hit(r, 0, math.MaxFloat64); h != nil {
 		N := vec3.Add(h.N, &vec3.Color{1, 1, 1})
 		return vec3.MultiplyFloat64(0.5, N)
 	}

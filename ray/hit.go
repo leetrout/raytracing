@@ -37,6 +37,5 @@ func (h *Hit) SetFaceNormal(r *Ray, outwardN *vec3.Vec3) {
 }
 
 type Hittable interface {
-	// TODO change to (bool, &Hit) and stop mutating
-	Hit(r *Ray, tMin, tMax float64, h *Hit) bool
+	Hit(r *Ray, tMin, tMax float64) *Hit
 }
