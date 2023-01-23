@@ -10,26 +10,11 @@ import (
 
 	"github.com/leetrout/raytracing/geo"
 	"github.com/leetrout/raytracing/img"
+	"github.com/leetrout/raytracing/mat"
 	"github.com/leetrout/raytracing/ray"
 	"github.com/leetrout/raytracing/scene"
 	"github.com/leetrout/raytracing/vec3"
 )
-
-func findRandomInUnitSphere() *vec3.Vec3 {
-	for {
-		// Random point in unit cube
-		p := vec3.Random(-1, 1)
-		if p.LengthSquared() >= 1 {
-			// p is outside unit sphere
-			continue
-		}
-		return p
-	}
-}
-
-func findRandomUnitVector() *vec3.Vec3 {
-	return vec3.UnitVector(findRandomInUnitSphere())
-}
 
 func RayColor(r *ray.Ray, s *scene.Scene, depth int) *vec3.Vec3 {
 	if depth <= 0 {
@@ -41,14 +26,21 @@ func RayColor(r *ray.Ray, s *scene.Scene, depth int) *vec3.Vec3 {
 		// N := vec3.Add(h.N, &vec3.Color{1, 1, 1})
 		// return vec3.MultiplyFloat64(0.5, N)
 
-		randomBounce := findRandomUnitVector()
+		// Hardcoded lambert
+		// randomBounce := vec3.RandomUnitVector()
+		// target := vec3.Sum(h.P, h.N, randomBounce)
+		// newRay := &ray.Ray{
+		// 	Origin:    h.P,
+		// 	Direction: vec3.Sub(target, h.P),
+		// }
+		// return vec3.MultiplyFloat64(0.5, RayColor(newRay, s, depth-1))
 
-		target := vec3.Sum(h.P, h.N, randomBounce)
-		newRay := &ray.Ray{
-			Origin:    h.P,
-			Direction: vec3.Sub(target, h.P),
+		doesScatter, scattered, attenuation := h.Mat.Scatter(r, h)
+		if doesScatter {
+			return vec3.MultiplyVec3(attenuation, RayColor(scattered, s, depth-1))
 		}
-		return vec3.MultiplyFloat64(0.5, RayColor(newRay, s, depth-1))
+
+		return &vec3.Color{}
 	}
 
 	// No hit, draw the background as a sky
@@ -79,10 +71,18 @@ func render(fh io.Writer) {
 
 	// Scene
 	s := &scene.Scene{}
-	// Sphere
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5})
-	// Floor
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100})
+
+	// Materials
+	mGround := &mat.Lambert{&vec3.Color{0.8, 0.8, 0.0}}
+	mCenter := &mat.Lambert{&vec3.Color{0.7, 0.3, 0.3}}
+	mLeft := &mat.Metal{&vec3.Color{0.8, 0.8, 0.8}, 0.3}
+	mRight := &mat.Metal{&vec3.Color{0.8, 0.6, 0.2}, 1.0}
+
+	// Objects
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100, mGround})
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5, mCenter})
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, 0.5, mLeft})
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{1, 0, -1}, 0.5, mRight})
 
 	cam := scene.NewCamera()
 

@@ -3,6 +3,7 @@ package geo
 import (
 	"math"
 
+	"github.com/leetrout/raytracing/mat"
 	"github.com/leetrout/raytracing/ray"
 	"github.com/leetrout/raytracing/vec3"
 )
@@ -10,11 +11,12 @@ import (
 type Sphere struct {
 	Center *vec3.Pt3
 	Radius float64
+	Mat    mat.Material
 }
 
-var _ ray.Hittable = &Sphere{}
+var _ mat.Hittable = &Sphere{}
 
-func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64) *ray.Hit {
+func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64) *mat.Hit {
 	if tMin < 0.00001 {
 		panic("tMin is too low. Use 0.001")
 	}
@@ -40,7 +42,8 @@ func (s *Sphere) Hit(r *ray.Ray, tMin float64, tMax float64) *ray.Hit {
 		}
 	}
 
-	h := ray.NewHit()
+	h := mat.NewHit()
+	h.Mat = s.Mat
 	h.T = root
 	h.P = r.At(root)
 	outwardNormal := vec3.DivideFloat(vec3.Sub(h.P, s.Center), s.Radius)

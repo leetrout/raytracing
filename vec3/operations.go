@@ -89,3 +89,23 @@ func Random(min, max int) *Vec3 {
 		getRandom(min, max),
 	}
 }
+
+func RandomInUnitSphere() *Vec3 {
+	for {
+		// Random point in unit cube
+		p := Random(-1, 1)
+		if p.LengthSquared() >= 1 {
+			// p is outside unit sphere
+			continue
+		}
+		return p
+	}
+}
+
+func RandomUnitVector() *Vec3 {
+	return UnitVector(RandomInUnitSphere())
+}
+
+func Reflect(v, n *Vec3) *Vec3 {
+	return Sub(v, MultiplyFloat64(2*Dot(v, n), n))
+}
