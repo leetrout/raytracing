@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/leetrout/raytracing/geo"
@@ -59,6 +60,23 @@ func RayColor(r *ray.Ray, s *scene.Scene, depth int) *vec3.Vec3 {
 	return vec3.Add(white, blue)
 }
 
+type Pixel struct {
+	id int
+	c  *vec3.Color
+}
+
+func RenderPixel(out chan *Pixel, s *scene.Scene, id, samplesPerPixel, maxDepth, width, height, row, col int) {
+	color := &vec3.Color{}
+	for p := 0; p < samplesPerPixel; p++ {
+		u := (float64(row) + rand.Float64()) / float64(width-1)
+		v := (float64(col) + rand.Float64()) / float64(height-1)
+
+		r := s.Camera.GetRay(u, v)
+		color = vec3.Add(color, RayColor(r, s, maxDepth))
+	}
+	out <- &Pixel{id, color}
+}
+
 func render(fh io.Writer) {
 	// Render
 	samplesPerPixel := 100
@@ -70,7 +88,9 @@ func render(fh io.Writer) {
 	imageHeight := int(float64(imageWidth) / aspectRatio)
 
 	// Scene
-	s := &scene.Scene{}
+	s := &scene.Scene{
+		Camera: scene.NewCamera(),
+	}
 
 	// Materials
 	mGround := &mat.Lambert{&vec3.Color{0.8, 0.8, 0.0}}
@@ -84,34 +104,49 @@ func render(fh io.Writer) {
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, 0.5, mLeft})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{1, 0, -1}, 0.5, mRight})
 
-	cam := scene.NewCamera()
-
 	pixels := make([][3]int, imageHeight*imageWidth)
+	pxLock := &sync.Mutex{}
+	pxOut := make(chan *Pixel)
 
-	for j := imageHeight - 1; j >= 0; j-- {
-		fmt.Printf("\r %s Scanlines remaining: %d     ", time.Now().Format("02 Jan 06 15:04:05.9"), j)
-		for i := 0; i < imageWidth; i++ {
-			color := &vec3.Color{}
+	totalWork := imageHeight * imageWidth
 
-			for p := 0; p < samplesPerPixel; p++ {
-				u := (float64(i) + rand.Float64()) / float64(imageWidth-1)
-				v := (float64(j) + rand.Float64()) / float64(imageHeight-1)
+	wg := &sync.WaitGroup{}
+	wg.Add(totalWork)
 
-				r := cam.GetRay(u, v)
-				color = vec3.Add(color, RayColor(r, s, maxDepth))
+	go (func(wg *sync.WaitGroup, out chan *Pixel, lock *sync.Mutex) {
+		fmt.Println("Pixel worker available")
+		for i := 0; i < totalWork; i++ {
+			if i > 0 && i%1000 == 0 {
+				progress := int(math.Round(float64(i) / float64(totalWork) * 100))
+				fmt.Printf("\rProgress (%d%%)", progress)
 			}
+			px := <-out
+			lock.Lock()
+			pixels[px.id] = img.Vec3AsRGB(px.c, samplesPerPixel)
+			wg.Done()
+			lock.Unlock()
+		}
+		fmt.Printf("\r\n")
+	})(wg, pxOut, pxLock)
 
+	fmt.Println("Enqueueing render jobs")
+	for j := imageHeight - 1; j >= 0; j-- {
+		// fmt.Printf("\r %s Scanlines remaining: %d     ", time.Now().Format("02 Jan 06 15:04:05.9"), j)
+		for i := 0; i < imageWidth; i++ {
 			// We're walking up the image from bottom to top but we need to
 			// write the pixels top to bottom so the current pixel is located
 			// at the image height (e.g. 200) minus 1 to zero index (199)
 			// and finally minus the current "row" (j) which starts at 199
 			// assuming a 200px image
 			pixelIdx := (imageWidth * (imageHeight - 1 - j)) + i
-			pixels[pixelIdx] = img.Vec3AsRGB(color, samplesPerPixel)
+
+			go RenderPixel(pxOut, s, pixelIdx, samplesPerPixel, maxDepth, imageWidth, imageHeight, i, j)
 		}
 	}
+
+	wg.Wait()
+	fmt.Println("Writing output")
 	img.WritePPM(fh, imageWidth, imageHeight, pixels)
-	fmt.Printf("\r\n")
 }
 
 func main() {

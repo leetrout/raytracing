@@ -7,6 +7,7 @@ import (
 
 type Scene struct {
 	Objects []mat.Hittable
+	Camera  *Camera
 }
 
 var _ mat.Hittable = &Scene{}
