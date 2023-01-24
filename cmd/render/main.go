@@ -89,9 +89,15 @@ func render(fh io.Writer) {
 
 	// Scene
 	s := &scene.Scene{
-		Camera: scene.NewCamera(),
+		Camera: scene.NewCamera(
+			&vec3.Pt3{-2, 2, 1},
+			&vec3.Pt3{0, 0, -1},
+			&vec3.Vec3{0, 1, 0},
+			20.0,
+			aspectRatio),
 	}
 
+	// Glass scene
 	// Materials
 	mGround := &mat.Lambert{&vec3.Color{0.8, 0.8, 0.0}}
 	mCenter := &mat.Lambert{&vec3.Color{0.1, 0.2, 0.5}}
@@ -102,8 +108,17 @@ func render(fh io.Writer) {
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100, mGround})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5, mCenter})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, 0.5, mLeft})
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, -0.4, mLeft})
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, -0.45, mLeft})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{1, 0, -1}, 0.5, mRight})
+	// End glass scene
+
+	// Simple scene
+	// R := math.Cos(math.Pi / 4)
+	// mLeft := &mat.Lambert{&vec3.Color{0, 0, 1}}
+	// mRight := &mat.Lambert{&vec3.Color{1, 0, 0}}
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-R, 0, -1}, R, mLeft})
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{R, 0, -1}, R, mRight})
+	// End simple scene
 
 	pixels := make([][3]int, imageHeight*imageWidth)
 	pxLock := &sync.Mutex{}
