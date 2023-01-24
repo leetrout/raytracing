@@ -9,11 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/leetrout/raytracing/geo"
 	"github.com/leetrout/raytracing/img"
-	"github.com/leetrout/raytracing/mat"
 	"github.com/leetrout/raytracing/ray"
 	"github.com/leetrout/raytracing/scene"
+	"github.com/leetrout/raytracing/scene/generated"
 	"github.com/leetrout/raytracing/vec3"
 )
 
@@ -79,45 +78,45 @@ func RenderPixel(out chan *Pixel, s *scene.Scene, id, samplesPerPixel, maxDepth,
 
 func render(fh io.Writer) {
 	// Render
-	samplesPerPixel := 100
-	maxDepth := 25
+	samplesPerPixel := 500
+	maxDepth := 50
 
 	// Image
-	aspectRatio := 16.0 / 9.0
-	imageWidth := 400
+	aspectRatio := 3.0 / 2.0
+	imageWidth := 1200
 	imageHeight := int(float64(imageWidth) / aspectRatio)
 
-	lookFrom := &vec3.Pt3{3, 3, 2}
-	lookAt := &vec3.Pt3{0, 0, -1}
-	up := &vec3.Vec3{0, 1, 0}
-	focusDist := vec3.Sub(lookFrom, lookAt).Length()
+	// lookFrom := &vec3.Pt3{3, 3, 2}
+	// lookAt := &vec3.Pt3{0, 0, -1}
+	// up := &vec3.Vec3{0, 1, 0}
+	// focusDist := vec3.Sub(lookFrom, lookAt).Length()
 
 	// Scene
-	s := &scene.Scene{
-		Camera: scene.NewCamera(
-			lookFrom,
-			lookAt,
-			up,
-			20.0,
-			aspectRatio,
-			2.0,
-			focusDist,
-		),
-	}
+	// s := &scene.Scene{
+	// 	Camera: scene.NewCamera(
+	// 		lookFrom,
+	// 		lookAt,
+	// 		up,
+	// 		20.0,
+	// 		aspectRatio,
+	// 		2.0,
+	// 		focusDist,
+	// 	),
+	// }
 
 	// Glass scene
 	// Materials
-	mGround := &mat.Lambert{&vec3.Color{0.8, 0.8, 0.0}}
-	mCenter := &mat.Lambert{&vec3.Color{0.1, 0.2, 0.5}}
-	mLeft := &mat.Dielectric{1.5}
-	mRight := &mat.Metal{&vec3.Color{0.8, 0.6, 0.2}, 0.0}
+	// mGround := &mat.Lambert{&vec3.Color{0.8, 0.8, 0.0}}
+	// mCenter := &mat.Lambert{&vec3.Color{0.1, 0.2, 0.5}}
+	// mLeft := &mat.Dielectric{1.5}
+	// mRight := &mat.Metal{&vec3.Color{0.8, 0.6, 0.2}, 0.0}
 
-	// Objects
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100, mGround})
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5, mCenter})
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, 0.5, mLeft})
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, -0.45, mLeft})
-	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{1, 0, -1}, 0.5, mRight})
+	// // Objects
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100, mGround})
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5, mCenter})
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, 0.5, mLeft})
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, -0.45, mLeft})
+	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{1, 0, -1}, 0.5, mRight})
 	// End glass scene
 
 	// Simple scene
@@ -127,6 +126,8 @@ func render(fh io.Writer) {
 	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-R, 0, -1}, R, mLeft})
 	// s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{R, 0, -1}, R, mRight})
 	// End simple scene
+
+	s := generated.GenerateScene()
 
 	pixels := make([][3]int, imageHeight*imageWidth)
 	pxLock := &sync.Mutex{}

@@ -81,15 +81,19 @@ func Invert(v *Vec3) *Vec3 {
 	}
 }
 
-func getRandom(min, max int) float64 {
+func GetRandom(min, max int) float64 {
 	return rand.Float64()*float64(max-min) + float64(min)
+}
+
+func GetRandomf(min, max float64) float64 {
+	return rand.Float64()*(max-min) + min
 }
 
 func Random(min, max int) *Vec3 {
 	return &Vec3{
-		getRandom(min, max),
-		getRandom(min, max),
-		getRandom(min, max),
+		GetRandom(min, max),
+		GetRandom(min, max),
+		GetRandom(min, max),
 	}
 }
 
@@ -108,8 +112,8 @@ func RandomInUnitSphere() *Vec3 {
 func RandomInUnitDisk() *Vec3 {
 	for {
 		p := &Vec3{
-			getRandom(-1, 1),
-			getRandom(-1, 1),
+			GetRandom(-1, 1),
+			GetRandom(-1, 1),
 			0,
 		}
 		if p.LengthSquared() >= 1 {
