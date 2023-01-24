@@ -105,6 +105,20 @@ func RandomInUnitSphere() *Vec3 {
 	}
 }
 
+func RandomInUnitDisk() *Vec3 {
+	for {
+		p := &Vec3{
+			getRandom(-1, 1),
+			getRandom(-1, 1),
+			0,
+		}
+		if p.LengthSquared() >= 1 {
+			continue
+		}
+		return p
+	}
+}
+
 func RandomUnitVector() *Vec3 {
 	return UnitVector(RandomInUnitSphere())
 }

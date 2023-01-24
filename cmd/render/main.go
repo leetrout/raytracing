@@ -87,14 +87,22 @@ func render(fh io.Writer) {
 	imageWidth := 400
 	imageHeight := int(float64(imageWidth) / aspectRatio)
 
+	lookFrom := &vec3.Pt3{3, 3, 2}
+	lookAt := &vec3.Pt3{0, 0, -1}
+	up := &vec3.Vec3{0, 1, 0}
+	focusDist := vec3.Sub(lookFrom, lookAt).Length()
+
 	// Scene
 	s := &scene.Scene{
 		Camera: scene.NewCamera(
-			&vec3.Pt3{-2, 2, 1},
-			&vec3.Pt3{0, 0, -1},
-			&vec3.Vec3{0, 1, 0},
+			lookFrom,
+			lookAt,
+			up,
 			20.0,
-			aspectRatio),
+			aspectRatio,
+			2.0,
+			focusDist,
+		),
 	}
 
 	// Glass scene

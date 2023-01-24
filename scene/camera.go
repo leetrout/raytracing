@@ -17,13 +17,16 @@ type Camera struct {
 	horizontal      *vec3.Vec3
 	vertical        *vec3.Vec3
 	lowerLeftCorner *vec3.Vec3
+	u               *vec3.Vec3
+	v               *vec3.Vec3
+	lensRadius      float64
 }
 
 func DegToRad(degrees float64) float64 {
 	return degrees * math.Pi / 180
 }
 
-func NewCamera(lookFrom, lookAt *vec3.Pt3, up *vec3.Vec3, vfovDegrees, aspectRatio float64) *Camera {
+func NewCamera(lookFrom, lookAt *vec3.Pt3, up *vec3.Vec3, vfovDegrees, aspectRatio, aperature, focusDist float64) *Camera {
 	theta := DegToRad(vfovDegrees)
 	height := math.Tan(theta / 2)
 	f := 1.0
@@ -38,8 +41,8 @@ func NewCamera(lookFrom, lookAt *vec3.Pt3, up *vec3.Vec3, vfovDegrees, aspectRat
 	vert := vec3.Cross(w, hor)
 
 	origin := lookFrom.Copy()
-	h := vec3.MultiplyFloat64(vpw, hor)
-	v := vec3.MultiplyFloat64(vph, vert)
+	h := vec3.MultiplyFloat64(focusDist*vpw, hor)
+	v := vec3.MultiplyFloat64(focusDist*vph, vert)
 
 	// Lower left corner is translated from the origin - start at 0,0,0
 	lowerLeftCorner := origin.Copy()
@@ -48,7 +51,9 @@ func NewCamera(lookFrom, lookAt *vec3.Pt3, up *vec3.Vec3, vfovDegrees, aspectRat
 	// Move down by half the width
 	lowerLeftCorner = vec3.Sub(lowerLeftCorner, vec3.DivideFloat(v, 2))
 	// Move back by the focal length
-	lowerLeftCorner = vec3.Sub(lowerLeftCorner, w)
+	lowerLeftCorner = vec3.Sub(lowerLeftCorner, vec3.MultiplyFloat64(focusDist, w))
+
+	lensRadius := aperature / 2
 
 	return &Camera{
 		AspectRatio:     aspectRatio,
@@ -59,12 +64,18 @@ func NewCamera(lookFrom, lookAt *vec3.Pt3, up *vec3.Vec3, vfovDegrees, aspectRat
 		horizontal:      h,
 		vertical:        v,
 		lowerLeftCorner: lowerLeftCorner,
+		u:               hor,
+		v:               vert,
+		lensRadius:      lensRadius,
 	}
 }
 
 func (c *Camera) GetRay(u, v float64) *ray.Ray {
+	rd := vec3.MultiplyFloat64(c.lensRadius, vec3.RandomInUnitDisk())
+	offset := vec3.Add(vec3.MultiplyFloat64(rd.X, c.u), vec3.MultiplyFloat64(rd.Y, c.v))
+
 	// Initialize ray from origin to corner
-	r := &ray.Ray{c.Origin.Copy(), c.lowerLeftCorner.Copy()}
+	r := &ray.Ray{vec3.Add(c.Origin, offset), c.lowerLeftCorner.Copy()}
 	// Move ray based on current pixel
 	// First horizontally
 	r.Direction = vec3.Add(r.Direction, vec3.MultiplyFloat64(u, c.horizontal))
@@ -72,5 +83,6 @@ func (c *Camera) GetRay(u, v float64) *ray.Ray {
 	r.Direction = vec3.Add(r.Direction, vec3.MultiplyFloat64(v, c.vertical))
 	// Subtract origin (remember negative Z is "forward")
 	r.Direction = vec3.Sub(r.Direction, c.Origin)
+	r.Direction = vec3.Sub(r.Direction, offset)
 	return r
 }
