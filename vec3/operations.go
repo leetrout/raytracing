@@ -1,6 +1,9 @@
 package vec3
 
-import "math/rand"
+import (
+	"math"
+	"math/rand"
+)
 
 func Add(u, v *Vec3) *Vec3 {
 	return &Vec3{
@@ -108,4 +111,11 @@ func RandomUnitVector() *Vec3 {
 
 func Reflect(v, n *Vec3) *Vec3 {
 	return Sub(v, MultiplyFloat64(2*Dot(v, n), n))
+}
+
+func Refract(uv *Vec3, n *Vec3, etaiOverEtat float64) *Vec3 {
+	cosTheta := math.Min(Dot(Invert(uv), n), 1.0)
+	rPerpendicular := MultiplyFloat64(etaiOverEtat, Add(uv, MultiplyFloat64(cosTheta, n)))
+	rParallel := MultiplyFloat64(math.Sqrt(math.Abs(1.0-rPerpendicular.LengthSquared()))*-1, n)
+	return Add(rPerpendicular, rParallel)
 }

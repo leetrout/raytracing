@@ -94,14 +94,15 @@ func render(fh io.Writer) {
 
 	// Materials
 	mGround := &mat.Lambert{&vec3.Color{0.8, 0.8, 0.0}}
-	mCenter := &mat.Lambert{&vec3.Color{0.7, 0.3, 0.3}}
-	mLeft := &mat.Metal{&vec3.Color{0.8, 0.8, 0.8}, 0.3}
-	mRight := &mat.Metal{&vec3.Color{0.8, 0.6, 0.2}, 1.0}
+	mCenter := &mat.Lambert{&vec3.Color{0.1, 0.2, 0.5}}
+	mLeft := &mat.Dielectric{1.5}
+	mRight := &mat.Metal{&vec3.Color{0.8, 0.6, 0.2}, 0.0}
 
 	// Objects
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, -100.5, -1}, 100, mGround})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{0, 0, -1}, 0.5, mCenter})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, 0.5, mLeft})
+	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{-1, 0, -1}, -0.4, mLeft})
 	s.Objects = append(s.Objects, &geo.Sphere{&vec3.Pt3{1, 0, -1}, 0.5, mRight})
 
 	pixels := make([][3]int, imageHeight*imageWidth)
